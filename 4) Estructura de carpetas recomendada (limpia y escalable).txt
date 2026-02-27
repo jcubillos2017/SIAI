@@ -1,0 +1,26 @@
+4) Estructura de carpetas recomendada (limpia y escalable)
+
+src/
+  app/
+    App.tsx
+    providers.tsx
+    router.tsx
+    theme.ts
+  shared/
+    api/
+      http.ts
+      types.ts
+  features/
+    auth/
+      LoginPage.tsx
+      auth.ts
+      guards.tsx
+    admin/
+      AdminLayout.tsx
+    users/
+      UsersPage.tsx
+      dialogs.tsx
+    imports/
+      ImportsPage.tsx
+      ComputerImportCard.tsx
+  main.tsx
