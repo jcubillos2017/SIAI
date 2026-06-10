@@ -27,6 +27,13 @@ EXPECTED_COMPUTER_COLUMNS = [
     "Tipo de Adquisicion",
 ]
 
+# Solo estas tres se exigen en el header; el resto son opcionales
+REQUIRED_COMPUTER_COLUMNS = [
+    "Codigo Inventario",
+    "Nombre Equipo",
+    "Numero de Serie",
+]
+
 
 def _norm_header(s: str) -> str:
     s = (s or "").strip().lower()
@@ -37,6 +44,7 @@ def _norm_header(s: str) -> str:
 
 
 EXPECTED_NORM = [_norm_header(c) for c in EXPECTED_COMPUTER_COLUMNS]
+REQUIRED_NORM = [_norm_header(c) for c in REQUIRED_COMPUTER_COLUMNS]
 
 
 def _read_csv(content: bytes) -> Tuple[List[str], List[Dict[str, Any]]]:
@@ -69,7 +77,7 @@ def _read_xlsx(content: bytes) -> Tuple[List[str], List[Dict[str, Any]]]:
 
 def _validate_headers(received_headers: List[str]) -> Tuple[bool, List[str]]:
     received_norm = [_norm_header(h) for h in received_headers]
-    missing = [EXPECTED_COMPUTER_COLUMNS[i] for i, en in enumerate(EXPECTED_NORM) if en not in received_norm]
+    missing = [REQUIRED_COMPUTER_COLUMNS[i] for i, rn in enumerate(REQUIRED_NORM) if rn not in received_norm]
     return (len(missing) == 0), missing
 
 
@@ -84,12 +92,9 @@ def _pick(row: Dict[str, Any], col_name: str) -> str:
 def _validate_row(row: Dict[str, Any], row_number: int) -> List[dict]:
     errors = []
     inv = _pick(row, "Codigo Inventario")
-    host = _pick(row, "Nombre Equipo")
     ser = _pick(row, "Numero de Serie")
     if not inv:
         errors.append({"row": row_number, "field": "Codigo Inventario", "message": "Requerido"})
-    if not host:
-        errors.append({"row": row_number, "field": "Nombre Equipo", "message": "Requerido"})
     if not ser:
         errors.append({"row": row_number, "field": "Numero de Serie", "message": "Requerido"})
     return errors
@@ -110,9 +115,10 @@ async def preview_computers(file_bytes: bytes, filename: str) -> dict:
     preview_rows: List[Dict[str, Any]] = []
     for idx, r in enumerate(rows[:10], start=2):
         errors.extend(_validate_row(r, idx))
+        inv_preview = _pick(r, "Codigo Inventario")
         preview_rows.append({
-            "Codigo Inventario": _pick(r, "Codigo Inventario"),
-            "Nombre Equipo": _pick(r, "Nombre Equipo"),
+            "Codigo Inventario": inv_preview,
+            "Nombre Equipo": _pick(r, "Nombre Equipo") or inv_preview,
             "Numero de Serie": _pick(r, "Numero de Serie"),
             "Marca": _pick(r, "Marca"),
             "Modelo": _pick(r, "Modelo"),
@@ -159,7 +165,7 @@ async def commit_computers(file_bytes: bytes, filename: str, user_id: PydanticOb
             continue
 
         inv = _pick(r, "Codigo Inventario")
-        host = _pick(r, "Nombre Equipo")
+        host = _pick(r, "Nombre Equipo") or inv
         ser = _pick(r, "Numero de Serie")
 
         doc = await Computer.find_one(Computer.inventory_code == inv)

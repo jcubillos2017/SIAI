@@ -40,9 +40,10 @@ export default function ComputerImportCard() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingCommit, setLoadingCommit] = useState(false);
 
-  // filtros de errores
+  // filtros de errores (preview y commit)
   const [q, setQ] = useState("");
   const [fieldFilter, setFieldFilter] = useState<string>("__ALL__");
+  const [commitErrFilter, setCommitErrFilter] = useState("");
 
   const downloadTemplate = async () => {
     const res = await apiFetch("/imports/templates/computers.csv", {
@@ -185,6 +186,24 @@ export default function ComputerImportCard() {
   const totalErrors = errorRows.length;
   const filteredCount = filteredErrorRows.length;
 
+  const commitErrorRows = useMemo<ErrorRow[]>(() => {
+    const errors = commit?.errors || [];
+    return errors.map((e, idx) => ({
+      id: `c-${e.row}-${e.field ?? "nofield"}-${idx}`,
+      row: e.row,
+      field: (e.field ?? "").trim() || "(sin campo)",
+      message: e.message,
+    }));
+  }, [commit]);
+
+  const filteredCommitErrors = useMemo(() => {
+    const q2 = commitErrFilter.trim().toLowerCase();
+    if (!q2) return commitErrorRows;
+    return commitErrorRows.filter((r) =>
+      `${r.row} ${r.field} ${r.message}`.toLowerCase().includes(q2),
+    );
+  }, [commitErrorRows, commitErrFilter]);
+
   return (
     <Card>
       <CardHeader
@@ -321,18 +340,50 @@ export default function ComputerImportCard() {
 
           {/* Resultado import */}
           {commit && (
-            <Alert severity={commit.errors?.length ? "warning" : "success"}>
-              Import OK ✅ total={commit.total_rows} created={commit.created}{" "}
-              updated={commit.updated} errors=
-              {commit.errors?.length ?? 0}
-            </Alert>
+            <Box>
+              <Alert severity={commit.errors?.length ? "warning" : "success"} sx={{ mb: 1 }}>
+                Import finalizado — total: {commit.total_rows} | creados:{" "}
+                {commit.created} | actualizados: {commit.updated} | errores:{" "}
+                {commit.errors?.length ?? 0}
+              </Alert>
+
+              {commitErrorRows.length > 0 && (
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Filas con error ({commitErrorRows.length})
+                  </Typography>
+
+                  <TextField
+                    size="small"
+                    label="Buscar en errores"
+                    value={commitErrFilter}
+                    onChange={(e) => setCommitErrFilter(e.target.value)}
+                    sx={{ mb: 1, width: 320 }}
+                  />
+
+                  <Box sx={{ height: 300 }}>
+                    <DataGrid
+                      rows={filteredCommitErrors}
+                      columns={errorColumns}
+                      disableRowSelectionOnClick
+                      pageSizeOptions={[10, 25, 50]}
+                      initialState={{
+                        pagination: { paginationModel: { pageSize: 25, page: 0 } },
+                      }}
+                      getRowId={(r) => r.id}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </Box>
           )}
 
           {/* Hint */}
           <Typography variant="body2" sx={{ opacity: 0.75 }}>
-            Columnas esperadas: Código Inventario, Nombre Equipo, Numero de
-            Serie, Marca, Modelo, Memoria, Tipo de Equipo, Procesador, Tarjeta
-            Video, Disco Duro.
+            Columnas requeridas: Codigo Inventario, Numero de Serie. Opcionales:
+            Nombre Equipo (si está vacío se usa el código), Marca, Modelo,
+            Memoria, Tipo de Equipo, Procesador, Tarjeta Video, Disco Duro,
+            Tipo de Adquisicion.
           </Typography>
         </Stack>
       </CardContent>

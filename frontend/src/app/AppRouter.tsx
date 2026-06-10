@@ -5,7 +5,8 @@ import DashboardHome from "@/features/admin/DashboardHome";
 import ImportsPage from "@/features/imports/ImportsPage";
 import { RequireAuth, RequireAdmin } from "@/features/auth/guards";
 import UserPage from "@/features/users/UsersPage";
-import InventoryPage from "@/features/inventory/InventoryPage"; 
+import InventoryHub from "@/features/inventory/InventoryHub";
+import InventoryPage from "@/features/inventory/InventoryPage";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -22,10 +23,9 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardHome /> },
       { path: "imports", element: <ImportsPage /> },
-
-      // placeholders por ahora:
       { path: "users", element: <UserPage /> },
-      { path: "inventory", element: < InventoryPage/> },
+      { path: "inventory", element: <InventoryHub /> },
+      { path: "inventory/computers", element: <InventoryPage /> },
     ],
   },
 
