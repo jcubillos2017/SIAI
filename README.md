@@ -1,6 +1,8 @@
 # SIAI — Sistema Integral Activos de Información
 
-Sistema de inventario para activos TI (computadores, y en el futuro monitores/scanners/etc.) con panel de administración para intranet.
+Sistema de inventario para activos TI (computadores, y en el futuro monitores, scanners, etc.) con panel de administración para intranet.
+
+---
 
 ## Stack
 
@@ -21,211 +23,185 @@ Sistema de inventario para activos TI (computadores, y en el futuro monitores/sc
 
 ## Estructura del repositorio
 
-
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+```
 siai/
-backend/
-frontend/
-
----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-## Requisitos
-
-- Node.js 18+ (recomendado 20+)
-- Python 3.11+ (en Windows funciona con 3.13, según tu instalación)
-- MongoDB (local o servidor interno)
-- Git
+├── backend/      # API FastAPI (Python)
+└── frontend/     # SPA React + Vite (TypeScript)
+```
 
 ---
 
-## Backend (FastAPI)
+## Requisitos previos
 
-### 1) Crear entorno e instalar dependencias
+| Herramienta | Versión mínima | Notas |
+|---|---|---|
+| Git | cualquiera | para clonar el repositorio |
+| Node.js | 18+ (recomendado 20+) | para el frontend |
+| Python | 3.11+ | 3.13 funciona en Windows |
+| MongoDB | 6+ | local o servidor interno |
+
+---
+
+## 1. Clonar el repositorio
 
 ```bash
+git clone https://github.com/TU_USUARIO/TU_REPO.git siai
+cd siai
+```
+
+---
+
+## 2. Configurar y levantar el Backend
+
+### 2.1 Crear entorno virtual e instalar dependencias
+
+```powershell
 cd backend
 
 python -m venv .venv
-# Windows
+
+# Activar en Windows (PowerShell)
 .\.venv\Scripts\Activate.ps1
-# Linux/Mac
+
+# Activar en Linux / Mac
 # source .venv/bin/activate
 
 python -m pip install -U pip
 python -m pip install -r requirements.txt
+```
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+### 2.2 Variables de entorno
 
-2) Variables de entorno
-
+```powershell
+# Windows
 copy .env.example .env
------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Edita backend/.env:
+# Linux / Mac
+# cp .env.example .env
+```
 
-MONGODB_URI
+Editar `backend/.env` con los valores del entorno:
 
-MONGODB_DB
+```env
+PROJECT_NAME=SIAI
+API_V1_STR=/api/v1
 
-SECRET_KEY (obligatorio: largo/aleatorio)
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=siai
 
-CORS_ORIGINS (frontend local)
+# Obligatorio: clave larga y aleatoria (mínimo 32 caracteres)
+SECRET_KEY=CAMBIA_ESTA_LLAVE_LARGA_Y_ALEATORIA
+ALGORITHM=HS256
 
-⚠️ backend/.env no se sube a git. Solo backend/.env.example.
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=7
 
-3) Levantar backend
+# Orígenes permitidos (separados por coma)
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+> ⚠️ `backend/.env` **no se sube a git**. Solo `backend/.env.example` está versionado.
+
+### 2.3 Levantar el backend
+
+```powershell
 uvicorn app.main:app --reload --port 8000
+```
 
-Swagger:
+- API disponible en: `http://127.0.0.1:8000`
+- Documentación Swagger: `http://127.0.0.1:8000/docs`
 
-http://127.0.0.1:8000/docs
+### 2.4 Crear el usuario Administrador (primer uso)
 
-4) Crear Admin (único)
+En una segunda terminal **con el mismo venv activo**:
 
-En otra terminal (mismo venv):
-
+```powershell
 python -m scripts.create_admin
+```
 
-El sistema permite solo un administrador.
-
-Frontend (React + Vite)
-1) Instalar dependencias y levantar
-cd frontend
-npm install
-npm run dev
-
-Frontend:
-
-http://localhost:5173
-
-El frontend usa proxy hacia el backend (/api -> http://127.0.0.1:8000).
-
-Módulos
-Módulo 1 — Usuarios (Admin)
-
-Login
-
-Gestión de usuarios (DataGrid):
-
-Crear usuario (rol user)
-
-Bloquear / Desbloquear
-
-Reset password (password temporal)
-
-Cambiar contraseña (admin)
-
-Eliminar usuario
-
-/users/me entrega rol + módulos permitidos
-
-Nota: Al cambiar/resetear password se revocan refresh tokens.
-
-Módulo 2 — Importaciones
-
-Descarga de plantilla (autenticada)
-
-Previsualización:
-
-Tabla preview (primeras filas)
-
-Tabla de errores con filtros (fila/campo/mensaje)
-
-Importación (commit) con resumen (created/updated/errors)
-
-Plantilla Computadores (columnas):
-
-Código Inventario
-
-Nombre Equipo
-
-Numero de Serie
-
-Marca
-
-Modelo
-
-Memoria
-
-Tipo de Equipo
-
-Procesador
-
-Tarjeta Video
-
-Disco Duro
-
-Tipo de Adquisicion (Compra/Arriendo)
-
-Módulo 3 — Inventario (Computadores)
-
-Listado + búsqueda + paginación server
-
-Detalle (doble click)
-
-CRUD completo (Admin):
-
-Crear computador manual
-
-Editar / actualizar
-
-Eliminar
-
-Seguridad (resumen)
-
-JWT Access Token + Refresh Token
-
-Revocación de refresh tokens por usuario al:
-
-Reset password
-
-Change password
-
-Set password (admin)
-
-Bloqueo (is_active=false)
-
-Admin único (no se crea desde UI)
-
-Variables sensibles fuera de git (.env)
-
-GitHub / Git
-Recomendación
-
-Repositorio privado mientras esté en construcción.
-
-Comandos típicos
-git status
-git add .
-git commit -m "Update: módulo inventario + importaciones"
-git push
-Roadmap corto
-
-Auditoría: registrar acciones (quién creó/editó/borró/importó)
-
-Soporte para Monitores/Scanners (misma arquitectura: import + inventario + CRUD)
-
-Integración con AD/LDAPS (guardar GUID en Mongo)
-
+> El sistema permite un único administrador. No se puede crear desde la UI.
 
 ---
 
-## Ahora, para subirlo a GitHub (privado)
-1) Crea repo **Private** en GitHub (web).
-2) En tu PC:
+## 3. Configurar y levantar el Frontend
 
 ```powershell
-cd D:\Project\siai
-git add README.md
-git commit -m "Add README"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/TU_REPO.git
-git push -u origin main
+cd frontend
+npm install
+npm run dev
+```
 
-Si ya tenías remoto agregado, solo:
+- Frontend disponible en: `http://localhost:5173`
 
+El frontend usa un proxy de Vite que redirige `/api` → `http://127.0.0.1:8000`, por lo que no es necesario configurar URLs manualmente.
+
+---
+
+## Módulos
+
+### Módulo 1 — Autenticación y Usuarios (Admin)
+
+- Login con JWT
+- Gestión de usuarios (DataGrid): crear, bloquear/desbloquear, reset de contraseña, eliminar
+- Cambio de contraseña propio y por admin
+- Al cambiar/resetear contraseña se revocan todos los refresh tokens del usuario
+
+### Módulo 2 — Importaciones
+
+- Descarga de plantilla Excel (autenticada)
+- Previsualización: tabla de primeras filas + tabla de errores (fila / campo / mensaje)
+- Importación con resumen (creados / actualizados / errores)
+
+**Columnas de la plantilla de Computadores:**
+
+| Columna | Requerido |
+|---|---|
+| Código Inventario | ✅ |
+| Nombre Equipo | ✅ |
+| Numero de Serie | ✅ |
+| Marca | — |
+| Modelo | — |
+| Memoria | — |
+| Tipo de Equipo | — |
+| Procesador | — |
+| Tarjeta Video | — |
+| Disco Duro | — |
+| Tipo de Adquisicion (Compra/Arriendo) | — |
+
+### Módulo 3 — Inventario (Computadores)
+
+- Listado con búsqueda avanzada y paginación server-side
+- Detalle del equipo (doble clic en fila)
+- CRUD completo (solo Admin): crear, editar, eliminar
+- Detección de equipos en línea (ping / barrido de red)
+
+---
+
+## Seguridad
+
+- JWT Access Token (60 min) + Refresh Token (7 días)
+- Revocación de refresh tokens al resetear o cambiar contraseña
+- Bloqueo de cuentas (`is_active=false`)
+- Admin único, creado solo por script
+- Variables sensibles fuera de git (`.env`)
+
+---
+
+## Roadmap
+
+- [ ] Auditoría: registrar quién creó / editó / borró / importó
+- [ ] Soporte para Monitores y Scanners (misma arquitectura)
+- [ ] Integración con Active Directory / LDAP (guardar GUID en Mongo)
+
+---
+
+## Git — comandos típicos
+
+```bash
+git status
+git add .
+git commit -m "feat: descripción del cambio"
 git push
+```
 
-Si quieres, también te creo un CONTRIBUTING.md y un CHANGELOG.md simple para que el proyecto se vea súper profesional (aunque sea privado).
-
+> Se recomienda mantener el repositorio **privado** mientras el proyecto esté en construcción.
