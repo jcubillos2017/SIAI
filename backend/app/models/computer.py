@@ -23,6 +23,12 @@ class Computer(Document):
     
     acquisition_type: Optional[str] = None  # Compra / Arriendo
 
+    # --- Estado de red (detección en línea) ---
+    ip_address: Optional[str] = None
+    is_online: Optional[bool] = None          # None = nunca verificado
+    last_seen_online: Optional[datetime] = None
+    last_ping_at: Optional[datetime] = None
+
     last_imported_at: datetime = Field(default_factory=datetime.utcnow)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

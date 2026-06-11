@@ -36,6 +36,10 @@ def to_public(c: Computer) -> ComputerPublic:
         created_at=c.created_at,
         updated_at=c.updated_at,
         acquisition_type=c.acquisition_type,
+        ip_address=c.ip_address,
+        is_online=c.is_online,
+        last_seen_online=c.last_seen_online,
+        last_ping_at=c.last_ping_at,
     )
 
 
@@ -106,6 +110,30 @@ async def list_computers(
         page=page,
         page_size=page_size,
     )
+
+
+# ============================================================
+# Detección de equipos en línea (ping) — rutas estáticas ANTES de /{computer_id}
+# ============================================================
+
+@router.get("/network/status")
+async def network_status(_=Depends(get_current_user)):
+    """Resumen del último barrido: en línea / fuera de línea / total."""
+    from app.services.network_service import sweep_state
+    return dict(sweep_state)
+
+
+@router.post("/network/sweep")
+async def trigger_sweep(_=Depends(require_admin)):
+    """Dispara un barrido manual de toda la red (solo Admin)."""
+    import asyncio
+    from app.services.network_service import sweep_all_computers, sweep_state
+
+    if sweep_state["running"]:
+        return {**sweep_state, "message": "Ya hay un barrido en curso"}
+
+    asyncio.create_task(sweep_all_computers())
+    return {"ok": True, "message": "Barrido iniciado"}
 
 
 @router.get("/{computer_id}", response_model=ComputerPublic)
@@ -195,3 +223,15 @@ async def delete_computer(computer_id: str, _=Depends(require_admin)):
 
     await doc.delete()
     return {"ok": True}
+
+@router.post("/{computer_id}/ping", response_model=ComputerPublic)
+async def ping_computer(computer_id: str, _=Depends(get_current_user)):
+    """Verifica en este momento si un equipo está en línea."""
+    from app.services.network_service import check_computer
+
+    doc = await Computer.get(to_oid(computer_id))
+    if not doc:
+        raise HTTPException(status_code=404, detail="Computador no existe")
+
+    doc = await check_computer(doc)
+    return to_public(doc)

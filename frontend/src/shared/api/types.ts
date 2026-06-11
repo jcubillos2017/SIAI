@@ -62,6 +62,12 @@ export interface Computer {
   storage_raw?: string | null;
   acquisition_type?: string | null;
 
+  // Estado de red
+  ip_address?: string | null;
+  is_online?: boolean | null;
+  last_seen_online?: string | null;
+  last_ping_at?: string | null;
+
   last_imported_at: string;
   created_at: string;
   updated_at: string;

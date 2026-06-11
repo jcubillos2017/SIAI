@@ -12,6 +12,7 @@ import {
   TextField,
   Typography,
   Tooltip,
+  Chip,
 } from "@mui/material";
 
 import {
@@ -85,6 +86,17 @@ export default function InventoryPage() {
       const params = buildParams(filters, pagination.page + 1, pagination.pageSize);
       return apiJson<ComputerListResponse>(`/computers/?${params}`);
     },
+    refetchInterval: 60_000, // refresca el estado de red automáticamente
+  });
+
+  const sweepNetwork = useMutation({
+    mutationFn: async () =>
+      apiJson<{ ok: boolean; message: string }>("/computers/network/sweep", {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      setSnack({ type: "success", msg: "Barrido de red iniciado ✅ Los estados se actualizarán en unos segundos." });
+    },
   });
 
   const createComputer = useMutation({
@@ -152,6 +164,21 @@ export default function InventoryPage() {
 
   const baseColumns = useMemo<GridColDef<Computer>[]>(() => {
     return [
+      {
+        field: "is_online",
+        headerName: "Estado",
+        minWidth: 120,
+        flex: 0.5,
+        sortable: false,
+        renderCell: (params) => {
+          const v = params.row.is_online;
+          if (v === true)
+            return <Chip label="En línea" color="success" size="small" />;
+          if (v === false)
+            return <Chip label="Fuera de línea" size="small" variant="outlined" />;
+          return <Chip label="—" size="small" variant="outlined" disabled />;
+        },
+      },
       { field: "inventory_code", headerName: "Código", minWidth: 130, flex: 0.6 },
       { field: "hostname", headerName: "Nombre Equipo", minWidth: 180, flex: 0.9 },
       { field: "serial_number", headerName: "Serie", minWidth: 170, flex: 0.9 },
@@ -245,6 +272,18 @@ export default function InventoryPage() {
             </Button>
           )}
 
+          {isAdmin && (
+            <Button
+              variant="outlined"
+              color="success"
+              startIcon={<RefreshIcon />}
+              onClick={() => sweepNetwork.mutate()}
+              disabled={sweepNetwork.isPending}
+            >
+              Verificar red
+            </Button>
+          )}
+
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
@@ -325,7 +364,12 @@ export default function InventoryPage() {
           rowCount={total}
           pageSizeOptions={[10, 25, 50, 100]}
           paginationModel={pagination}
-          onPaginationModelChange={setPagination}
+          onPaginationModelChange={(newModel) => {
+            setPagination((prev) => ({
+              page: newModel.pageSize !== prev.pageSize ? 0 : newModel.page,
+              pageSize: newModel.pageSize,
+            }));
+          }}
           onRowDoubleClick={(params) => setSelected(params.row as Computer)}
         />
       </Box>

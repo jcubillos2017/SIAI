@@ -18,6 +18,12 @@ class ComputerPublic(BaseModel):
     storage_raw: Optional[str] = None
     acquisition_type: Optional[str] = None  # Compra / Arriendo
 
+    # Estado de red
+    ip_address: Optional[str] = None
+    is_online: Optional[bool] = None
+    last_seen_online: Optional[datetime] = None
+    last_ping_at: Optional[datetime] = None
+
     last_imported_at: datetime
     created_at: datetime
     updated_at: datetime

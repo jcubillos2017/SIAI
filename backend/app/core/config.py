@@ -18,5 +18,11 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:5173"
 
+    # --- Detección de equipos en línea (ping) ---
+    PING_ENABLED: bool = True
+    PING_INTERVAL_MINUTES: int = 5      # barrido automático cada N minutos
+    PING_TIMEOUT_MS: int = 1000         # timeout por equipo
+    PING_CONCURRENCY: int = 50          # pings simultáneos máximos
+
 
 settings = Settings()

@@ -26,6 +26,7 @@ const router = createBrowserRouter([
       { path: "users", element: <UserPage /> },
       { path: "inventory", element: <InventoryHub /> },
       { path: "inventory/computers", element: <InventoryPage /> },
+
     ],
   },
 

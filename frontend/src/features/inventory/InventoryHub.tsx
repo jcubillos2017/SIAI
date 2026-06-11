@@ -7,14 +7,14 @@ const INVENTORY_CATEGORIES = [
   {
     key: "computers",
     label: "Desktop y Móviles",
-    description: "Computadores de escritorio, notebooks y equipos all-in-one.",
+    description: "Computadores de escritorio, Notebooks.",
     path: "/admin/inventory/computers",
     icon: DesktopWindowsIcon,
   },
   {
     key: "monitors",
     label: "Monitores",
-    description: "Pantallas y monitores asignados a los puestos de trabajo.",
+    description: "",
     path: "/admin/inventory/monitors",
     icon: MonitorIcon,
   },

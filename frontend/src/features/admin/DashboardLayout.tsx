@@ -53,7 +53,7 @@ export default function DashboardLayout() {
   const drawerContent = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Box sx={{ p: 2 }}>
-        <Typography variant="h6">SIAI</Typography>
+        <Typography variant="h6">SIGA_EC</Typography>
         <Typography variant="body2" sx={{ opacity: 0.8 }}>
           Panel
         </Typography>
